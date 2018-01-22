@@ -19,7 +19,7 @@ def main():
         return
     for repo in org.get_repos():
         in_scope = repo.name in settings.PROJECT_REPOS
-        if not in_scope:
+        if settings.PROJECT_REPOS and not in_scope:
             continue 
         for pull in repo.get_pulls():
             print('[%s]' % repo.name, pull.title, pull.html_url)
@@ -43,7 +43,7 @@ def check(pull):
     if reviews_approved(pull) < 1:
         mistakes.append('PR should be reviewed and approved by at least one team member')
 
-    if not all(st == 'success' for st in get_statuses(pull)):
+    if not last_commit_built_successfully(pull):
         mistakes.append('There are unsuccessfull travis checks in last PR commit')
 
     if not has_test_confirmation(pull):
@@ -51,9 +51,10 @@ def check(pull):
 
     return mistakes
 
-def get_statuses(pull):
+def last_commit_built_successfully(pull):
     last_commit = list(pull.get_commits())[-1]
-    return [st.state for st in last_commit.get_statuses() if st.state != 'pending']
+    status = last_commit.get_combined_status()
+    return status.state == 'success'
 
 def reviews_approved(pull):
     approvals = 0
