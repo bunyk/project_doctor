@@ -23,6 +23,9 @@ def main():
             continue 
         for pull in repo.get_pulls():
             print('[%s]' % repo.name, pull.title, pull.html_url)
+            if in_progress(pull):
+                print('\t', green('in progress'))
+                continue
             mistakes = check(pull)
             if not mistakes:
                 print('\t', green('OK'))
@@ -31,6 +34,8 @@ def main():
         #import bpython; bpython.embed(locals())
         #return
 
+def in_progress(pull):
+    return 'in progress' in pull.body.lower()
 
 def check(pull):
     mistakes = []
